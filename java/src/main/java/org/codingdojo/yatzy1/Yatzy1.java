@@ -1,246 +1,153 @@
 package org.codingdojo.yatzy1;
 
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 public class Yatzy1 {
 
-    public static int chance(int d1, int d2, int d3, int d4, int d5)
-    {
-        int total = 0;
-        total += d1;
-        total += d2;
-        total += d3;
-        total += d4;
-        total += d5;
-        return total;
-    }
+    private static final int MAX_DICES = 5;
 
-    public static int yatzy(int... dice)
-    {
-        int[] counts = new int[6];
-        for (int die : dice)
-            counts[die-1]++;
-        for (int i = 0; i != 6; i++)
-            if (counts[i] == 5)
-                return 50;
-        return 0;
-    }
+    private static final int YATZY_WINNING_SCORE = 50;
+    private static final int YATZY_LOSING_SCORE = 0;
 
-    public static int ones(int d1, int d2, int d3, int d4, int d5) {
-        int sum = 0;
-        if (d1 == 1) sum++;
-        if (d2 == 1) sum++;
-        if (d3 == 1) sum++;
-        if (d4 == 1) sum++;
-        if (d5 == 1) 
-            sum++;
+    private static final int EXPECTED_FIRST_DICE_ON_SMALL_STRAIGHT = 1;
+    private static final int EXPECTED_LAST_DICE_ON_SMALL_STRAIGHT = 5;
+    private static final int SCORE_ON_SMALL_STRAIGHT = 15;
 
-        return sum;
-    }
+    private static final int EXPECTED_FIRST_DICE_ON_LARGE_STRAIGHT = 2;
+    private static final int EXPECTED_LAST_DICE_ON_LARGE_STRAIGHT = 6;
+    private static final int SCORE_ON_LARGE_STRAIGHT = 20;
 
-    public static int twos(int d1, int d2, int d3, int d4, int d5) {
-        int sum = 0;
-        if (d1 == 2) sum += 2;
-        if (d2 == 2) sum += 2;
-        if (d3 == 2) sum += 2;
-        if (d4 == 2) sum += 2;
-        if (d5 == 2) sum += 2;
-        return sum;
-    }
+    private static final int DEFAULT_LOSING_SCORE = 0;
 
-    public static int threes(int d1, int d2, int d3, int d4, int d5) {
-        int s;    
-        s = 0;
-        if (d1 == 3) s += 3;
-        if (d2 == 3) s += 3;
-        if (d3 == 3) s += 3;
-        if (d4 == 3) s += 3;
-        if (d5 == 3) s += 3;
-        return s;
-    }
+    private final int[] dice;
 
-    protected int[] dice;
-    public Yatzy1() {}
-    public Yatzy1(int d1, int d2, int d3, int d4, int _5)
-    {
-        this();
-        dice = new int[5];
+    public Yatzy1(int d1, int d2, int d3, int d4, int d5) {
+        dice = new int[MAX_DICES];
         dice[0] = d1;
         dice[1] = d2;
         dice[2] = d3;
         dice[3] = d4;
-        dice[4] = _5;
+        dice[4] = d5;
     }
 
-    public int fours()
-    {
-        int sum;    
-        sum = 0;
-        for (int at = 0; at != 5; at++) {
-            if (dice[at] == 4) {
-                sum += 4;
-            }
+    public int chance() {
+        return sum();
+    }
+
+    private int sum() {
+        return Arrays.stream(dice).sum();
+    }
+
+    public int yatzy() {
+        long distinctDicesCount = Arrays.stream(dice).distinct().count();
+
+        return distinctDicesCount == 1 ? YATZY_WINNING_SCORE : YATZY_LOSING_SCORE;
+    }
+
+    public int ones() {
+        return sum(1);
+    }
+
+    public int twos() {
+        return sum(2);
+    }
+
+    public int threes() {
+        return sum(3);
+    }
+
+    public int fours() {
+        return sum(4);
+    }
+
+    public int fives() {
+        return sum(5);
+    }
+
+    public int sixes() {
+        return sum(6);
+    }
+
+    private int sum(int diceNumberToSum) {
+        return Arrays.stream(dice)
+            .filter(d -> d == diceNumberToSum)
+            .sum();
+    }
+
+    public int onePair() {
+        return getPairs(2)
+            .stream()
+            .max(Comparator.comparingInt(d -> d))
+            .orElse(DEFAULT_LOSING_SCORE) * 2;
+    }
+
+    public int twoPairs() {
+        List<Integer> pairs = getPairs(2);
+
+        if (pairs.size() == 2) {
+            return pairs.stream().reduce(0, Integer::sum) * 2;
         }
-        return sum;
+
+        return DEFAULT_LOSING_SCORE;
     }
 
-    public int fives()
-    {
-        int s = 0;
-        int i;
-        for (i = 0; i < dice.length; i++) 
-            if (dice[i] == 5)
-                s = s + 5;
-        return s;
+    public int threeOfSameKind() {
+        return getPairs(3)
+            .stream()
+            .findAny()
+            .orElse(DEFAULT_LOSING_SCORE) * 3;
     }
 
-    public int sixes()
-    {
-        int sum = 0;
-        for (int at = 0; at < dice.length; at++) 
-            if (dice[at] == 6)
-                sum = sum + 6;
-        return sum;
+    public int fourOfSameKind() {
+        return getPairs(4)
+            .stream()
+            .findAny()
+            .orElse(DEFAULT_LOSING_SCORE) * 4;
     }
 
-    public int score_pair(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] counts = new int[6];
-        counts[d1-1]++;
-        counts[d2-1]++;
-        counts[d3-1]++;
-        counts[d4-1]++;
-        counts[d5-1]++;
-        int at;
-        for (at = 0; at != 6; at++)
-            if (counts[6-at-1] >= 2)
-                return (6-at)*2;
-        return 0;
+    private List<Integer> getPairs(int requiredOccurrences) {
+        return Stream.of(dice[0], dice[1], dice[2], dice[3], dice[4])
+            .collect(Collectors.groupingBy(d -> d, Collectors.counting()))
+            .entrySet()
+            .stream()
+            .filter(entry -> entry.getValue() >= requiredOccurrences)
+            .map(Map.Entry::getKey)
+            .toList();
     }
 
-    public static int two_pair(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] counts = new int[6];
-        counts[d1-1]++;
-        counts[d2-1]++;
-        counts[d3-1]++;
-        counts[d4-1]++;
-        counts[d5-1]++;
-        int n = 0;
-        int score = 0;
-        for (int i = 0; i < 6; i += 1)
-            if (counts[6-i-1] >= 2) {
-                n++;
-                score += (6-i);
-            }        
-        if (n == 2)
-            return score * 2;
-        else
-            return 0;
+    public int smallStraight() {
+        return getScoreOnStraight(
+            EXPECTED_FIRST_DICE_ON_SMALL_STRAIGHT,
+            EXPECTED_LAST_DICE_ON_SMALL_STRAIGHT,
+            SCORE_ON_SMALL_STRAIGHT);
     }
 
-    public static int four_of_a_kind(int _1, int _2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        tallies = new int[6];
-        tallies[_1-1]++;
-        tallies[_2-1]++;
-        tallies[d3-1]++;
-        tallies[d4-1]++;
-        tallies[d5-1]++;
-        for (int i = 0; i < 6; i++)
-            if (tallies[i] >= 4)
-                return (i+1) * 4;
-        return 0;
+    public int largeStraight() {
+        return getScoreOnStraight(
+            EXPECTED_FIRST_DICE_ON_LARGE_STRAIGHT,
+            EXPECTED_LAST_DICE_ON_LARGE_STRAIGHT,
+            SCORE_ON_LARGE_STRAIGHT);
     }
 
-    public static int three_of_a_kind(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] t;
-        t = new int[6];
-        t[d1-1]++;
-        t[d2-1]++;
-        t[d3-1]++;
-        t[d4-1]++;
-        t[d5-1]++;
-        for (int i = 0; i < 6; i++)
-            if (t[i] >= 3)
-                return (i+1) * 3;
-        return 0;
+    private int getScoreOnStraight(int expectedFirstDice, int expectedLastDice, int scoreOnStraight) {
+        int[] distinctDices = Arrays.stream(dice)
+            .distinct()
+            .sorted()
+            .toArray();
+
+        return (distinctDices.length == MAX_DICES
+            && distinctDices[0] == expectedFirstDice
+            && distinctDices[MAX_DICES - 1] == expectedLastDice) ? scoreOnStraight : DEFAULT_LOSING_SCORE;
     }
 
+    public int fullHouse() {
+        Set<Integer> distinctDices = Stream.of(dice[0], dice[1], dice[2], dice[3], dice[4])
+            .collect(Collectors.groupingBy(d -> d, Collectors.counting()))
+            .keySet();
 
-    public static int smallStraight(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        tallies = new int[6];
-        tallies[d1-1] += 1;
-        tallies[d2-1] += 1;
-        tallies[d3-1] += 1;
-        tallies[d4-1] += 1;
-        tallies[d5-1] += 1;
-        if (tallies[0] == 1 &&
-            tallies[1] == 1 &&
-            tallies[2] == 1 &&
-            tallies[3] == 1 &&
-            tallies[4] == 1)
-            return 15;
-        return 0;
+        return distinctDices.size() == 2 ? chance() : DEFAULT_LOSING_SCORE;
     }
 
-    public static int largeStraight(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        tallies = new int[6];
-        tallies[d1-1] += 1;
-        tallies[d2-1] += 1;
-        tallies[d3-1] += 1;
-        tallies[d4-1] += 1;
-        tallies[d5-1] += 1;
-        if (tallies[1] == 1 &&
-            tallies[2] == 1 &&
-            tallies[3] == 1 &&
-            tallies[4] == 1
-            && tallies[5] == 1)
-            return 20;
-        return 0;
-    }
-
-    public static int fullHouse(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        boolean _2 = false;
-        int i;
-        int _2_at = 0;
-        boolean _3 = false;
-        int _3_at = 0;
-
-
-
-
-        tallies = new int[6];
-        tallies[d1-1] += 1;
-        tallies[d2-1] += 1;
-        tallies[d3-1] += 1;
-        tallies[d4-1] += 1;
-        tallies[d5-1] += 1;
-
-        for (i = 0; i != 6; i += 1)
-            if (tallies[i] == 2) {
-                _2 = true;
-                _2_at = i+1;
-            }
-
-        for (i = 0; i != 6; i += 1)
-            if (tallies[i] == 3) {
-                _3 = true;
-                _3_at = i+1;
-            }
-
-        if (_2 && _3)
-            return _2_at * 2 + _3_at * 3;
-        else
-            return 0;
-    }
 }
-
-
-
