@@ -1,3 +1,7 @@
+# Java Solution - Yatzy Refactoring Kata
+
+Click [here](https://github.com/kevin-llps/Yatzy-Refactoring-Kata/tree/solution-java) to access Java Solution
+
 _Support this and all my katas via [Patreon](https://www.patreon.com/EmilyBache)_
  
  # Yatzy Refactoring Kata
